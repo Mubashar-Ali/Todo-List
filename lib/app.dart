@@ -1,152 +1,128 @@
 import 'package:flutter/material.dart';
+import 'package:todo_list/components/card.dart';
+import 'package:todo_list/database/todo_db.dart';
+import 'package:todo_list/models/todo_model.dart';
 
-class App extends StatelessWidget {
+class App extends StatefulWidget {
   const App({super.key});
+
+  @override
+  State<App> createState() => _AppState();
+}
+
+class _AppState extends State<App> {
+  final db = TodoDB();
+  late final TextEditingController titleController = TextEditingController();
+  late final TextEditingController descriptionController =
+      TextEditingController();
+
+  List<TodoModel> todos = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // titleController = TextEditingController();
+    // descriptionController = TextEditingController();
+    fetchTodos();
+  }
+
+  fetchTodos() async {
+    todos = await db.getTodos();
+    setState(() {});
+  }
+
+  Future<void> addTodo() async {
+    final title = titleController.text.trim();
+    final description = descriptionController.text.trim();
+
+    if (title.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Title cannot be empty!')),
+      );
+      return;
+    }
+
+    final newTodo = TodoModel(
+      title: title,
+      description: description,
+    );
+
+    await db.insertTodo(newTodo);
+    titleController.clear();
+    descriptionController.clear();
+
+    fetchTodos(); // Refresh the list
+  }
+
+  Future<void> deleteTodo(int id) async {
+    await db.deleteTodo(id);
+    fetchTodos(); // Refresh the list
+  }
+
+  @override
+  void dispose() {
+    titleController.dispose();
+    descriptionController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade300,
-      body: ListView(
-        children: const [
-          MyCard(title: "Title 1"),
-          MyCard(title: "Title 2", color: Colors.green, category: "Personal"),
-          MyCard(
-            title: "Title 3",
-            color: Colors.blue,
-            category: "Work",
-            description:
-                'This is my description, and it is a bit longer to test the dynamic height adjustment of the container.',
+      // backgroundColor: Colors.black,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(labelText: 'Title'),
+                ),
+                TextField(
+                  controller: descriptionController,
+                  decoration: const InputDecoration(labelText: 'Description'),
+                ),
+                const SizedBox(height: 16),
+                // ElevatedButton(
+                //   onPressed: addTodo,
+                //   child: const Text('Add Todo'),
+                // ),
+              ],
+            ),
           ),
-          MyCard(
-            title: "Title 5",
-            color: Colors.blue,
-            category: "Work",
-            description:
-                'This is my description, and it is a bit longer to test the dynamic height adjustment of the container. This is my description, and it is a bit longer to test the dynamic height adjustment of the container.',
-          ),
-          MyCard(
-            title: "Title 3",
-            color: Colors.blue,
-            category: "Work",
-            description: 'This is my description',
+          Expanded(
+            child: todos.isEmpty
+                ? const Center(child: Text('No todos found!!'))
+                : ListView.builder(
+                    itemCount: todos.length,
+                    itemBuilder: (context, index) {
+                      final todo = todos[index];
+                      // return ListTile(
+                      //   title: Text(todo.title),
+                      //   subtitle: Text(todo.description ?? ''),
+                      //   trailing: IconButton(
+                      //     icon: const Icon(Icons.delete, color: Colors.red),
+                      //     onPressed: () => deleteTodo(todo.id!),
+                      //   ),
+                      // );
+                      return MyCard(title: todo.title, description: todo.description);
+                    },
+                  ),
           ),
         ],
       ),
-    );
-  }
-}
-
-class MyCard extends StatelessWidget {
-  const MyCard({
-    super.key,
-    required this.title,
-    this.category = "No Category",
-    this.description,
-    this.color = Colors.grey,
-  });
-
-  final Color color;
-  final String title;
-  final String category;
-  final String? description;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        // boxShadow: [
-        //   BoxShadow(
-        //     color: Colors.black.withOpacity(0.1),
-        //     blurRadius: 5,
-        //     offset: const Offset(0, 3),
-        //   ),
-        // ],
-      ),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Colored bar
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(100),
-                bottomLeft: Radius.circular(100),
-              ),
-              child: ColoredBox(
-                color: color,
-                child: const SizedBox(height: double.infinity, width: 10),
-              ),
-            ),
-            // Content
-            Expanded(
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title with Checkbox
-                    StatefulBuilder(
-                      builder: (BuildContext context,
-                          void Function(void Function()) setState) {
-                        bool toggle = false;
-                        return CheckboxListTile(
-                          checkboxShape: const CircleBorder(),
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(
-                            title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                          value: toggle,
-                          onChanged: (val) {
-                            setState(() {
-                              // Update the state of the checkbox
-                              toggle = val!;
-                            });
-                          },
-                        );
-                      },
-                    ),
-                    // Divider
-                    Divider(color: Colors.grey.shade300),
-                    // Description
-                    if (description != null)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 5),
-                        child: Text(
-                          description!,
-                          maxLines: 2,
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ),
-                    // Category
-                    Row(
-                      children: [
-                        Text(
-                          category,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const Text(
-                          ' - ',
-                          style: TextStyle(fontSize: 30),
-                        ),
-                      ],
-                    )
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+      floatingActionButton: FloatingActionButton(
+        shape: const CircleBorder(),
+        foregroundColor: Colors.white,
+        backgroundColor: Colors.blue,
+        onPressed: addTodo,
+        // onPressed: () {
+        //   print('Clicked...');
+        // },
+        child: const Icon(Icons.add, size: 24),
       ),
     );
   }

@@ -8,14 +8,14 @@ class TodoDB {
   }
 
   // Get all cards
-  Future<List<TodoModel>> getAllCards() async {
+  Future<List<TodoModel>> getTodos() async {
     final db = await DbHelper.getDB();
     final result = await db.query(TodoModel.tableName);
     return result.map((map) => TodoModel.fromMap(map)).toList();
   }
 
   // Update a CardModel
-  Future<int> updateCard(TodoModel card) async {
+  Future<int> updateTodo(TodoModel card) async {
     final db = await DbHelper.getDB();
     return await db.update(
       TodoModel.tableName,
@@ -26,7 +26,7 @@ class TodoDB {
   }
 
   // Delete a CardModel by ID
-  Future<int> deleteCard(int id) async {
+  Future<int> deleteTodo(int id) async {
     final db = await DbHelper.getDB();
     return await db.delete(
       TodoModel.tableName,
