@@ -6,7 +6,7 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.purple.shade300,
+      backgroundColor: Colors.grey.shade300,
       body: ListView(
         children: const [
           MyCard(title: "Title 1"),
@@ -19,7 +19,7 @@ class App extends StatelessWidget {
                 'This is my description, and it is a bit longer to test the dynamic height adjustment of the container.',
           ),
           MyCard(
-            title: "Title 3",
+            title: "Title 5",
             color: Colors.blue,
             category: "Work",
             description:
@@ -58,13 +58,13 @@ class MyCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        // boxShadow: [
+        //   BoxShadow(
+        //     color: Colors.black.withOpacity(0.1),
+        //     blurRadius: 5,
+        //     offset: const Offset(0, 3),
+        //   ),
+        // ],
       ),
       child: IntrinsicHeight(
         child: Row(
@@ -90,18 +90,29 @@ class MyCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Title with Checkbox
-                    CheckboxListTile(
-                      checkboxShape: const CircleBorder(),
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(
-                        title,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
-                      value: false,
-                      onChanged: (val) {},
+                    StatefulBuilder(
+                      builder: (BuildContext context,
+                          void Function(void Function()) setState) {
+                        bool toggle = false;
+                        return CheckboxListTile(
+                          checkboxShape: const CircleBorder(),
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(
+                            title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                          value: toggle,
+                          onChanged: (val) {
+                            setState(() {
+                              // Update the state of the checkbox
+                              toggle = val!;
+                            });
+                          },
+                        );
+                      },
                     ),
                     // Divider
                     Divider(color: Colors.grey.shade300),
@@ -111,7 +122,7 @@ class MyCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 5),
                         child: Text(
                           description!,
-                          maxLines: 1,
+                          maxLines: 2,
                           style: const TextStyle(fontSize: 14),
                         ),
                       ),
